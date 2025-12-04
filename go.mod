@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/ilyakaznacheev/cleanenv v1.5.0
-	golang.org/x/exp v0.0.0-20251125195548-87e1e737ad39
+	golang.org/x/exp v0.0.0-20251125195548-87e1e737ad39 // indirect
 	modernc.org/sqlite v1.40.1
 )
 

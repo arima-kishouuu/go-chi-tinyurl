@@ -3,7 +3,9 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
+	"example.com/urlshortner/internal/storage"
 	_ "modernc.org/sqlite"
 )
 
@@ -37,4 +39,31 @@ func New(storagePath string) (*Storage, error) {
 	}
 
 	return &Storage{db: db}, nil
+}
+
+func (s *Storage) SaveUrl(urlToSave string, alias string) (int64, error) {
+	const op = "storage.sqlite.SaveURL"
+
+	stmt, err := s.db.Prepare(`
+	INSERT INTO url(alias, url)
+	VALUES(?, ?)
+	`)
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	res, err := stmt.Exec(alias, urlToSave)
+	if err != nil {
+		// Check if it's a unique constraint violation
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			return 0, fmt.Errorf("%s: %w", op, storage.ErrURLExists)
+		}
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	id, err := res.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("%s, %w", op, err)
+	}
+	return id, nil
 }
